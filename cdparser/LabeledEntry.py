@@ -11,10 +11,12 @@ class LabeledEntry:
     # reduce_labels() creates a best-guess record from a sequence of predicted labels
     def reduce_labels(self):
         if self.categories == None:
-            categories = {
+            categories = { # I have added two additional categories 'statuses' and 'municipalties'
                 'subjects': [],
+                'statuses': [],
                 'occupations': [],
-                'locations': []
+                'locations': [],
+                'municipalties': []
             }
             # We use the three vars below to construct record inputs as we iterate
             # through the sequence of labels
@@ -25,8 +27,8 @@ class LabeledEntry:
                 token = token_tuple[0] # 'token' gets the actual text of the token
                 if constructing_label == label:
                     # If the previously seen label is the same as the current, we simply append
-                    if constructing_label == "PA":
-                        constructing_predicate += " " + token
+                    if constructing_label == "PA": # Could be removed as we don't work with 'PA' tag
+                        constructing_predicate += " " + token # Could be removed as we don't work with 'PA' tag
                     else:
                         constructing_entity += " " + token
                 else:
@@ -34,6 +36,8 @@ class LabeledEntry:
                     # stored in the 'constructing_' vars...
                     if constructing_label == 'NC':
                         categories['subjects'].append(constructing_entity)
+                    elif constructing_label == 'SC':
+                        categories['statuses'].append(constructing_entity)
                     elif constructing_label == 'OC':
                         categories['occupations'].append(constructing_entity)
                     elif constructing_label == 'AC':
@@ -42,6 +46,8 @@ class LabeledEntry:
                             location['labels'] = list(filter(None, constructing_predicate.split(" .")))
                             constructing_predicate = ""
                         categories['locations'].append(location)
+                    elif constructing_label == 'MC':
+                        categories['municipalties'].append(constructing_entity)
                     constructing_entity = ""
                     constructing_label = label
                     if constructing_label == "PA":

@@ -24,7 +24,7 @@ class Features:
     @staticmethod
     def __word_feature_functions():
         return {
-            "word.junior": Features.__is_junior_token,
+            "word.housewife": Features.__is_housewife_token,
             "word.widow.token": Features.__is_widow_token,
             "word.contains.digit": Features.__contains_digit,
             "word.is.delimiter": Features.__is_delimiter,
@@ -79,7 +79,7 @@ class Features:
                 return True
         return False
 
-    @staticmethod
+    @staticmethod # Check if can be removed, likely refers to adress predicate (h. = home) from nyc directories)
     def __is_known_position_adj(input):
         if len(input) == 1:
             if input == 'h' or input == 'r':
@@ -87,9 +87,9 @@ class Features:
         return False
 
     @staticmethod
-    def __is_junior_token(input):
+    def __is_housewife_token(input):
         dc = input.lower()
-        if dc == "jr":
+        if dc == "hvr" or dc == "huisvr":
             return True
         return False
 
@@ -104,6 +104,6 @@ class Features:
     @staticmethod
     def __is_widow_token(input):
         dc = input.lower()
-        if dc == "wid" or dc == "widow":
+        if dc == "wed" or dc == "weduwe":
             return True
         return False

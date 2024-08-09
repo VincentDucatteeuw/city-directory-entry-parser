@@ -58,11 +58,11 @@ class Utils:
 
     TAG_MAP = {
         'NC': 'green',
+        'SC': 'black',
         'OC': 'blue',
         'AC': 'red',
-        'PA': 'darkcyan',
+        'MC': 'darkcyan',
         'START': 'darkyellow',
         'D': 'darkmagenta',
-        'X': 'black',
         'END': 'darkyellow',
     }
