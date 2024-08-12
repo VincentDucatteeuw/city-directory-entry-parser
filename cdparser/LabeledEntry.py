@@ -11,12 +11,12 @@ class LabeledEntry:
     # reduce_labels() creates a best-guess record from a sequence of predicted labels
     def reduce_labels(self):
         if self.categories == None:
-            categories = { # I have added two additional categories 'statuses' and 'municipalties'
+            categories = { # I have added two additional categories 'statuses' and 'municipalities'
                 'subjects': [],
                 'statuses': [],
                 'occupations': [],
                 'locations': [],
-                'municipalties': []
+                'municipalities': []
             }
             # We use the three vars below to construct record inputs as we iterate
             # through the sequence of labels
@@ -47,7 +47,7 @@ class LabeledEntry:
                             constructing_predicate = ""
                         categories['locations'].append(location)
                     elif constructing_label == 'MC':
-                        categories['municipalties'].append(constructing_entity)
+                        categories['municipalities'].append(constructing_entity)
                     constructing_entity = ""
                     constructing_label = label
                     if constructing_label == "PA":
