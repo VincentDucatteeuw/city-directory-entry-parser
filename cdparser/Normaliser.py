@@ -117,12 +117,12 @@ def clean_occupation(data): # TO DO
 def clean_location(data): # DONE
     data['value'] = data['value'].strip()
 
-    data = re.sub(r'(\w+str)\.?', r'\1aat', data) # Replace 'str.' with 'straat'
+    data = re.sub(r'(\w+str)\.?\s', r'\1aat', data) # Replace 'str.' with 'straat'
 
-    data = re.sub(r'(\w+steenw)\.?', r'\1eg', data) # Replace 'steenw.' with 'steenweg'
+    data = re.sub(r'(\w+steenw)\.?\s', r'\1eg', data) # Replace 'steenw.' with 'steenweg'
     data = re.sub(r"stw\.?", "steenweg", data) # Replace 'stw.' with 'steenweg'
 
-    data = re.sub(r'(\w+pl)\.?', r'\1aats', data) # Replace 'pl.' with 'plaats' # Issue that 'pl' is also in 'plein'
+    data = re.sub(r'(\w+pl)\.?\s', r'\1aats', data) # Replace 'pl.' with 'plaats' # Issue that 'pl' is also in 'plein'
 
     data = re.sub(r's\.?\s', "Sint", data) # Replace 's.' with 'Sint
 
