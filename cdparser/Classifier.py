@@ -6,6 +6,9 @@ from cdparser.Features import Features
 from cdparser.LabeledEntry import LabeledEntry
 import sklearn_crfsuite
 from sklearn_crfsuite import metrics
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, accuracy_score
 
 class Classifier:
     def __init__ (self, training_data=None):
@@ -42,62 +45,52 @@ class Classifier:
         labeled_data.append(example)
         return labeled_data
 
-    def listen(self):
-        for line in fileinput.input(sys.argv[3:]):
+    def listen(self, file):
+        self.model = joblib.load('crf_model.pkl')
+        for line in fileinput.input(file):
             entry = LabeledEntry(line.rstrip())
-            print(json.dumps(self.label(entry).categories))
+            labeled_entry = self.label(entry, self.model)
+            print(json.dumps(labeled_entry.categories))
 
     def load_training(self, path_to_csv, rows_to_ignore=0):
         self.training_set_labeled = self.load_labeled_data(path_to_csv, rows_to_ignore)
         self.__process_training_data()
 
-    def load_validation(self, path_to_csv, rows_to_ignore=0):
-        self.validation_set_labeled = self.load_labeled_data(path_to_csv, rows_to_ignore)
-        self.__process_validation_data()
-
     def __process_training_data(self):
         self.training_set_features = [Features.get_sentence_features(s) for s in self.training_set_labeled]
         self.training_set_labels = [Features.get_sentence_labels(s) for s in self.training_set_labeled]
 
-    def __process_validation_data(self):
-        self.validation_set_features = [Features.get_sentence_features(s) for s in self.validation_set_labeled]
-        self.validation_set_labels = [Features.get_sentence_labels(s) for s in self.validation_set_labeled]
-
-    def train(self):
+    def train(self, name):
         self.crf = sklearn_crfsuite.CRF(
             algorithm='lbfgs',
-            c1=0.1,
-            c2=0.1,
+            c1=0.01,
+            c2=0.01,
             max_iterations=1000,
             all_possible_transitions=False,
-            verbose=False
+            verbose=True
             )
-        self.crf.fit(self.training_set_features, self.training_set_labels)
+        X_Train, X_Test, Y_Train, Y_Test = train_test_split(self.training_set_features, self.training_set_labels, test_size=0.1, random_state=40)
+        self.crf.fit(X_Train, Y_Train)
+        Y_Pred = self.crf.predict(X_Test)
+        Y_Test_flat = [label for seq in Y_Test for label in seq]
+        Y_Pred_flat = [label for seq in Y_Pred for label in seq]
+        print(classification_report(Y_Test_flat, Y_Pred_flat))
+        token_accuracy = accuracy_score(Y_Test_flat, Y_Pred_flat)
+        print(f"Per-token accuracy: {token_accuracy:.2f}")
 
-    def validation_metrics(self):
-        labels = list(self.crf.classes_)
-        validation_predictions = self.crf.predict(self.validation_set_features)
-        return metrics.flat_f1_score(self.validation_set_labels, validation_predictions, average='weighted', labels=labels)
 
-    def print_validation_metrics_per_class(self):
-        validation_predictions = self.crf.predict(self.validation_set_features)
-        sorted_labels = sorted(
-            list(self.crf.classes_),
-            key=lambda name: (name[1:], name[0])
-        )
-        print(metrics.flat_classification_report(
-            self.validation_set_labels, validation_predictions, labels=sorted_labels, digits=5
-        ))
+        model_filename = name + '.pkg'
+        joblib.dump(self.crf, model_filename)
 
-    def predict_labeled_tokens(self, labeled_tokens):
+    def predict_labeled_tokens(self, labeled_tokens, model):
         features_set = [Features.get_sentence_features(labeled_tokens)]
-        return self.crf.predict(features_set)[0]
+        return model.predict(features_set)[0]
 
-    def label(self, labeled_entry):
+    def label(self, labeled_entry, model):
         if isinstance(labeled_entry, list):
-            return list(self.label(x) for x in labeled_entry)
+            return [self.label(x, model) for x in labeled_entry]
         else:
-            labeled_entry.token_labels = self.predict_labeled_tokens(labeled_entry.tokens)
+            labeled_entry.token_labels = self.predict_labeled_tokens(labeled_entry.tokens, model)
             labeled_entry.is_parsed = True
             labeled_entry.reduce_labels()
             return labeled_entry
