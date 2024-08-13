@@ -47,10 +47,15 @@ class Classifier:
 
     def listen(self, file, model):
         self.model = joblib.load(model)
+        json_items = []
         for line in fileinput.input(file):
             entry = LabeledEntry(line.rstrip())
             labeled_entry = self.label(entry, self.model)
-            print(json.dumps(labeled_entry.categories))
+            json_items.append(labeled_entry.categories)
+        with open('CRF_output.json', 'w', encoding='utf-8') as f:
+            json.dump(json_items, f, ensure_ascii=False, indent=4)
+        for item in json_items:
+            print(item)
 
     def load_training(self, path_to_csv, rows_to_ignore=0):
         self.training_set_labeled = self.load_labeled_data(path_to_csv, rows_to_ignore)

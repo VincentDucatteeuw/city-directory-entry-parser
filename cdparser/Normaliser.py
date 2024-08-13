@@ -111,6 +111,6 @@ def clean_municipality(data): # DONE
     return data
 
 # Usage
-input_file = "C:/Users/vducatte/OneDrive - UGent/Documents/GitHub/city-directory-entry-parser/data/ghent-city-directories/wegwijzer-1913-output.json"
+input_file = "/home/bavercru/Documents/Visual Code - workspace/CRF/CRF_output.json"
 output_file = 'cleaned_output.json'
 clean_json_file(input_file, output_file)
