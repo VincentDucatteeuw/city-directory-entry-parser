@@ -45,8 +45,8 @@ class Classifier:
         labeled_data.append(example)
         return labeled_data
 
-    def listen(self, file):
-        self.model = joblib.load('crf_model.pkl')
+    def listen(self, file, model):
+        self.model = joblib.load(model)
         for line in fileinput.input(file):
             entry = LabeledEntry(line.rstrip())
             labeled_entry = self.label(entry, self.model)
