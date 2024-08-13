@@ -69,7 +69,7 @@ class Classifier:
             all_possible_transitions=False,
             verbose=True
             )
-        X_Train, X_Test, Y_Train, Y_Test = train_test_split(self.training_set_features, self.training_set_labels, test_size=0.1, random_state=40)
+        X_Train, X_Test, Y_Train, Y_Test = train_test_split(self.training_set_features, self.training_set_labels, test_size=0.1, random_state=69)
         self.crf.fit(X_Train, Y_Train)
         Y_Pred = self.crf.predict(X_Test)
         Y_Test_flat = [label for seq in Y_Test for label in seq]
