@@ -4,20 +4,20 @@ import difflib
 
 def clean_json_file(input_file, output_file):
     try:
-        with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+        with open(input_file, 'r', encoding='utf-8', errors='ignore') as infile, open(output_file, 'w', encoding='utf-8', errors='ignore') as outfile:
             data = json.load(infile)
 
             # Ensure data is a list of dictionaries
             for entry in data:
         
                 # Clean subjects
-               #entry['subjects'] = [clean_subject(subject) for subject in entry['subjects']]
+                entry['subjects'] = [clean_subject(subject) for subject in entry['subjects']]
                         
                 # Clean statuses
-                #entry['statuses'] = [clean_status(status) for status in entry['statuses']]
+                entry['statuses'] = [clean_status(status) for status in entry['statuses']]
                         
                 # Clean occupations
-                #entry['occupations'] = [clean_occupation(occupation) for occupation in entry['occupations']]
+                entry['occupations'] = [clean_occupation(occupation) for occupation in entry['occupations']]
                         
                 # Clean locations
                 entry['locations'] = [clean_location(location) for location in entry['locations']]
@@ -30,38 +30,87 @@ def clean_json_file(input_file, output_file):
                 outfile.write('\n')
 
         # Write the cleaned data back to the output file
-        with open(output_file, 'w') as outfile:
-            json.dump(data, outfile, indent=4)  # Added `indent=4` for pretty printing
+        with open(output_file, 'w', encoding='utf-8', errors='ignore') as outfile:
+            json.dump(data, outfile, indent=4, ensure_ascii=False)  # Added `ensure_ascii=False` for non-ASCII characters
 
     except json.JSONDecodeError as e:
         print(f"Skipping invalid JSON: {e}")
 
-#def clean_subject(data): # TO DO
-#    data = data.strip()
-#    return data
+def clean_subject(entry):
 
-#def clean_status(data):
-#    data = data.strip().lower()
+    # Apply all the replacements
+    replacements = [
+        (r'\s\.', '.'), # Remove spaces before periods
+        (r'\s\,', ','), # Remove spaces before commas
+        (r'\s\),', ')'), # Remove spaces before closing parentheses
+        (r'\,$', '.'), # Replace trailing ',' with '.'
+        (r'([A-Z])$', r'\1.'), # Add a period at the end of the string if it's a single capital letter
+        (r'(?<!\ben\s)zust\.?$', 'zusters'), # Replace 'zust.' with 'zusters'
+        (r'en\s?zust\.?$', 'en zuster'), # Replace 'en zust.' with 'en zusters'
+        (r'gebroed$', 'gebroeders'), # Replace 'gebroed' with 'gebroeders'
+        (r'broed\.?$', 'broeders'), # Replace 'broed.' with 'broeders'
+        (r'naaml\.? maatsch\.?', 'naamloze maatschappij'), # Replace 'naaml. maatsch.' with 'naamlooze maatschappij'
+        ]
+
+    for pattern, replacement in replacements:
+        entry = re.sub(pattern, replacement, entry)
+
+    return entry
+
+def clean_status(entry):
+    entry = entry.strip().lower()
+    entry = re.sub(r'\s\.', '.', entry)  # Remove spaces before periods
 
     # Define status standardization
-#    status_mappings = {
-#        'weduwe': r'^w(ed|eduwe)\.?$',
-#        'juffrouw': r'^juff(r\.?)?$',
-#        'huisvrouw': r'^h(uisvr?|vr)\.?$',
-#        'mevrouw': r'^me?vr\.?$', 
-#    }
+    standardised_statuses = {
+        'weduwe': r'^w(ed|eduwe)\.?$',
+        'juffrouw': r'^juffr?\.?$',
+        'huisvrouw': r'^h(uisvr?|vr)\.?$',
+        'mevrouw': r'^me?vr\.?$', 
+    }
 
     # Check for matches using regex patterns
-#    for standardised_status, pattern in status_mappings.items():
-#        if re.match(pattern, data):
-#            return standardised_status
-#    return data  # Return original data if no match found
+    for standardised_status, pattern in standardised_statuses.items():
+        if re.match(pattern, entry):
+            return standardised_status
+    return entry  # Return original data if no match found
 
-#def clean_occupation(data): # TO DO
-#    data = data.strip().lower()
-#    data = re.sub(r'-', ' ', data)  # Replace hyphens with spaces
-    # Add more specific cleaning rules for occupations
-#    return data
+def clean_occupation(entry):
+    # Apply all the replacements
+
+    replacements = [
+        (r'\s\.', '.'), # Remove spaces before periods
+        (r'\s\,', ','), # Remove spaces before commas
+        (r'\s\),', ')'), # Remove spaces before closing parentheses
+        (r'\,$', '.'), # Replace trailing ',' with '.'
+        (r'^\s', ''), # Remove leading whitespace
+        (r'herberg(\.|$)', 'herbergier'),
+        (r'herb\.?$', 'herbergier'),
+        (r'mekaniekmak.', 'mekaniekmaker'),
+        (r'elledgoed\.?$', 'elledgoedmaker'),
+        (r'bijzonder\.?$', 'bijzondere'),
+        (r'vleeschh\.?$', 'vleeschhouwer'),
+        (r'varkenssl\.?$', 'varkensslachter'),
+        (r'kleerm(\.|ak\.)$', 'kleermaker'),
+        (r'katoenspin.', 'katoenspinnerij'),
+        (r'houth\.?$', 'houthandelaar'),
+        (r'kolenk\.?$', 'kolenkoopman'),
+        (r'koopm.', 'koopman'),
+        (r'handelsvertegenw.', 'handelsvertegenwoordiger'),
+        (r'modew.', 'modewaren'),
+        (r'vischhandel.', 'vischhandelaar'),
+        (r'policiecommiss.', 'politiecommissaris'),
+        (r'beschuitfabrik.', 'beschuitfabrikant'),
+        (r'wijsbeg.', 'wijsbegeerte'),
+        (r'meubelm.', 'meubelmaker'),
+        (r'foorereiz.', 'foorereiziger'),
+        (r'provinc best.', 'provinciaal bestuur'),
+        ]
+
+    for pattern, replacement in replacements:
+        entry = re.sub(pattern, replacement, entry)
+
+    return entry
 
 def clean_location(entry):
     if isinstance(entry, dict):
@@ -85,7 +134,7 @@ def clean_location(entry):
             (r'bruss\.?\s', 'brusselsche '), # Replace 'bruss' with 'brusselsche '
             (r'kortr\.?\s', 'kortrijksche '), # Replace 'kortr' with 'kortrijksche '
             (r'drong\.?\s', 'drongensche '), # Replace 'drong' with 'drongensche '
-            (r'meulest\.?\s', 'meulestede '), # Replace 'meulest' with 'meulesteedsche '
+            (r'meulest\.?\s', 'meulesteedsche '), # Replace 'meulest' with 'meulesteedsche '
             (r'\bs\.\s', 'sint ') # Replace 's.' with 'sint '
         ]
         
