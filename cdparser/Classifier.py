@@ -2,13 +2,14 @@ import csv
 import fileinput
 import json
 import sys
+import numpy as np
 from cdparser.Features import Features
 from cdparser.LabeledEntry import LabeledEntry
 import sklearn_crfsuite
 from sklearn_crfsuite import metrics
 import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
 class Classifier:
     def __init__ (self, training_data=None):
@@ -74,7 +75,7 @@ class Classifier:
             all_possible_transitions=False,
             verbose=True
             )
-        X_Train, X_Test, Y_Train, Y_Test = train_test_split(self.training_set_features, self.training_set_labels, test_size=0.1, random_state=69)
+        X_Train, X_Test, Y_Train, Y_Test = train_test_split(self.training_set_features, self.training_set_labels, test_size=0.2, random_state=69)
         self.crf.fit(X_Train, Y_Train)
         Y_Pred = self.crf.predict(X_Test)
         Y_Test_flat = [label for seq in Y_Test for label in seq]
@@ -82,6 +83,20 @@ class Classifier:
         print(classification_report(Y_Test_flat, Y_Pred_flat))
         token_accuracy = accuracy_score(Y_Test_flat, Y_Pred_flat)
         print(f"Per-token accuracy: {token_accuracy:.2f}")
+
+        # Confusion matrix
+        conf_matrix = confusion_matrix(Y_Test_flat, Y_Pred_flat, labels=self.crf.classes_)
+
+        # Calculate FP and FN
+        FP = conf_matrix.sum(axis=0) - np.diag(conf_matrix)
+        FN = conf_matrix.sum(axis=1) - np.diag(conf_matrix)
+
+        # Print FP and FN for each class
+        for i, label in enumerate(self.crf.classes_):
+            print(f"Label: {label}")
+            print(f"False Positives: {FP[i]}")
+            print(f"False Negatives: {FN[i]}")
+            print()
 
 
         model_filename = name + '.pkg'

@@ -1,4 +1,5 @@
 from functools import partial
+import json
 
 class Features:
 
@@ -24,18 +25,22 @@ class Features:
     @staticmethod
     def __word_feature_functions():
         return {
-            "word.miss": Features.__is_miss_or_misses_token,
-            "word.housewife": Features.__is_housewife_token,
-            "word.widow.token": Features.__is_widow_token,
-            "word.contains.digit": Features.__contains_digit,
-            "word.is.delimiter": Features.__is_delimiter,
-            "word.is.start.token": Features.__is_start,
-            "word.is.end.token": Features.__is_end,
-            "word.is.lower": str.islower,
-            "word.is.title": str.istitle,
-            "word.is.upper": str.isupper,
-            "word.substr[-2:]" : partial(Features.__substr, 2),
-            "word.substr[-1:]": partial(Features.__substr, 1)
+                "token.has.special.character" : Features.__has_special_character,
+                "token.has.only.numbers" : Features.__only_contains_numbers,
+                "token.has.some.numbers" : Features.__contains_some_numbers,
+                "token.is.status" : Features.__is_status,
+                "token.has.capital.letter" : Features.__has_capital_letter,
+                "token.has.only.capital.letters" : Features.__has_only_capital_letters,
+                "token.has.capital.letter" : Features.__has_capital_letter,
+                "token.has.no.capital.letters" : Features.__has_no_captital_letters,
+                "token.is.HISCO.approved" : Features.__is_listed_in_HISCO,
+                "token.contains.punctuation" : Features.__contains_punctuation,
+                "token.is.start" : Features.__is_start,
+                "token.is.end" : Features.__is_end,   
+                "token.is.seperator" : Features.__is_seperator,
+                "token.last.3.characters" : partial(Features.__get_the_last_characters, 3),
+                "token.last.2.characters" : partial(Features.__get_the_last_characters, 2),
+                "token.last.2.characters" : partial(Features.__get_the_last_characters, 1)
         }
 
     @staticmethod
@@ -51,67 +56,47 @@ class Features:
         return [token for token, label in sentence]
 
     @staticmethod
-    def __contains_digit(input):
-        for c in input:
-            if c.isdigit():
-                return True
+    def __has_special_character(token):
+        # List can be extended for other purposes
+        special_character_list = ['*']
+        return token in special_character_list
+    @staticmethod
+    def __only_contains_numbers(token):
+         return token.isdigit()
+    @staticmethod
+    def __contains_some_numbers(token):
+        return any(char.isdigit() for char in token)
+    @staticmethod
+    def __is_status(token):
+        with open("cdparser/features/statuses.json", 'r') as file:
+            status_map = json.load(file)
+        print(token in status_map.values())
+        return token in status_map.values()
+    @staticmethod
+    # Will be implemented at a later stage
+    def __is_listed_in_HISCO(token):
         return False
-
     @staticmethod
-    def __substr(amount, word):
-        return word[amount:]
-
+    def __has_capital_letter(token):
+        return any(char.isupper() for char in token)
     @staticmethod
-    def __is_start(input):
-        if input == "START":
-            return True
-        return False
-
+    def __has_only_capital_letters(token):
+        return token.isupper()
     @staticmethod
-    def __is_end(input):
-        if input == "END":
-            return True
-        return False
-
+    def __has_no_captital_letters(token):
+        return token.islower()
     @staticmethod
-    def __is_delimiter(input):
-        for c in input:
-            if c == '.' or c == ',':
-                return True
-        return False
-
-    #@staticmethod # Check if can be removed, likely refers to adress predicate (h. = home) from nyc directories)
-    #def __is_known_position_adj(input):
-    #    if len(input) == 1:
-    #        if input == 'h' or input == 'r':
-    #            return True
-    #    return False
-
+    def __is_start(token):
+        return token == 'START'
     @staticmethod
-    def __is_housewife_token(input):
-        dc = input.lower()
-        if dc == "hvr" or dc == "huisvr":
-            return True
-        return False
-    
+    def __is_end(token):
+        return token == 'END'
     @staticmethod
-    def __is_miss_or_misses_token(input):
-        dc = input.lower()
-        if dc == "juff" or dc == "mevr":
-            return True
-        return False
-
+    def __is_seperator(token):
+        return token == ' ' or token == ','
     @staticmethod
-    def __segment_of_sentence(sent, i, div):
-        sent_length = len(sent)
-        pos = i + 1
-        for j in range(1,div + 1):
-            if pos <= j*(sent_length / float(div)):
-                return j
-
+    def __contains_punctuation(token):
+        return '.' in token
     @staticmethod
-    def __is_widow_token(input):
-        dc = input.lower()
-        if dc == "wed" or dc == "weduwe" or dc == "we":
-            return True
-        return False
+    def __get_the_last_characters(amount, token):
+        return str(token)[-amount:]
