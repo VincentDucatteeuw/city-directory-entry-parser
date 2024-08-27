@@ -70,7 +70,6 @@ class Features:
     def __is_status(token):
         with open("cdparser/features/statuses.json", 'r') as file:
             status_map = json.load(file)
-        print(token in status_map.values())
         return token in status_map.values()
     @staticmethod
     # Will be implemented at a later stage
